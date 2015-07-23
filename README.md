@@ -40,7 +40,16 @@ hubotApprove "Do you want to stage?"
 input id: 'Proceed', message: "Staging?"
 ```
 
-Here's an example of it in action inside [Let's Chat](http://sdelements.github.io/lets-chat/):
+Here's an example of the `hubotApprove` step inside [Let's Chat](http://sdelements.github.io/lets-chat/):
 
 ![example of the approval in action with LetsChat](images/approve.png "hubotApprove inside Let's Chat")
 
+This goal is part of the reusable [maven/CanaryReleaseStageAndApprovePromote.groovy](https://github.com/fabric8io/jenkins-workflow-library/blob/master/maven/CanaryReleaseStageAndApprovePromote.groovy) Jenkins workflow script in the default [Fabric8 DevOps library of Jenkins Workflows](https://github.com/fabric8io/jenkins-workflow-library) which can be used on any Maven based project created via the [Fabric8 DevOps tooling](ttp://fabric8.io/guide/cdelivery.html) or [console](ttp://fabric8.io/guide/cdelivery.html).
+
+The behaviour of this script is to:
+
+* perform a canary release of all maven artifacts and docker images
+* run automated integration tests in a brand new kubernetes environment with all the docker images and kubernetes resources (pods, replication contorllers, services etc)
+* stage the canary release to a staging environment
+* ask the user to prompt if it should be promoted to a production environment
+* if successful the release is promoted to production
