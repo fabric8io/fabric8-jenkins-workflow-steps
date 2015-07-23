@@ -49,7 +49,7 @@ This goal is part of the reusable [maven/CanaryReleaseStageAndApprovePromote.gro
 The behaviour of this script is to:
 
 * perform a canary release of all maven artifacts and docker images
-* run automated integration tests in a brand new kubernetes environment with all the docker images and kubernetes resources (pods, replication contorllers, services etc)
+* run automated [Kuberentes integration tests](http://fabric8.io/guide/testing.html) in a brand new kubernetes environment with all the docker images and kubernetes resources (pods, replication controllers, services etc)
 * stage the canary release to a staging environment
 * ask the user to prompt if it should be promoted to a production environment
 * if successful the release is promoted to production
