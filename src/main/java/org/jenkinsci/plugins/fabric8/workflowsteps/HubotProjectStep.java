@@ -19,12 +19,12 @@ package org.jenkinsci.plugins.fabric8.workflowsteps;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.model.TaskListener;
+import org.jenkinsci.plugins.fabric8.support.DevOps;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousStepExecution;
 import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
 import org.kohsuke.stapler.DataBoundConstructor;
-
-import static org.jenkinsci.plugins.fabric8.workflowsteps.Systems.getEnvOrIfBlankDefault;
+import org.jenkinsci.plugins.fabric8.support.HubotClient;
 
 /**
  * Sends a message to hubot on the current projects room by discovering the
@@ -71,11 +71,7 @@ public class HubotProjectStep extends Fabric8Step {
 
         @Override
         protected String run() throws Exception {
-            String room = DevOps.getProjectRoom(listener, workspace);
-            if (Strings.isNullOrBlank(room)) {
-                room = getEnvOrIfBlankDefault("FABRIC8_DEFAULT_HUBOT_ROOM", "fabric8_default");
-            }
-            return HubotClient.notify(listener, room, step.getMessage());
+            return HubotClient.notifyProject(listener, workspace, step.getMessage());
         }
 
         private static final long serialVersionUID = 1L;

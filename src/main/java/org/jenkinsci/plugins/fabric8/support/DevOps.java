@@ -14,12 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jenkinsci.plugins.fabric8.workflowsteps;
+package org.jenkinsci.plugins.fabric8.support;
 
+import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.model.TaskListener;
 
 import java.io.IOException;
+
+import static org.jenkinsci.plugins.fabric8.workflowsteps.Steps.log;
 
 
 /**
@@ -53,5 +56,18 @@ public class DevOps {
     public static String getProjectRoom(TaskListener listener, FilePath workspace) throws IOException, InterruptedException {
         String yaml = loadFabric8YFile(listener, workspace);
         return yamlValue(yaml, "");
+    }
+
+    public static String getJobName(TaskListener listener, EnvVars envVars) {
+        return envVars.get("JOB_NAME");
+    }
+
+    public static String getBuildNumber(TaskListener listener, EnvVars envVars) {
+        String answer = envVars.get("BUILD_NUMBER");
+        if (answer == null) {
+            log(listener, "No BUILD_NUMBER!");
+            return "1";
+        }
+        return answer;
     }
 }

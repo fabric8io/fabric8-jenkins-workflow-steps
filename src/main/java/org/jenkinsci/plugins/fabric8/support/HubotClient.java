@@ -14,8 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jenkinsci.plugins.fabric8.workflowsteps;
+package org.jenkinsci.plugins.fabric8.support;
 
+import hudson.FilePath;
 import hudson.model.TaskListener;
 import org.apache.http.HttpHost;
 import org.apache.http.NameValuePair;
@@ -24,9 +25,11 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.message.BasicNameValuePair;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.jenkinsci.plugins.fabric8.support.Systems.getEnvOrIfBlankDefault;
 import static org.jenkinsci.plugins.fabric8.workflowsteps.Steps.log;
 
 /**
@@ -68,5 +71,24 @@ public class HubotClient {
             log(listener, "No service found!");
             return null;
         }
+    }
+
+    /**
+     * Sends the message to the default chat room for the current project
+     * by detecting the `fabric8.yml` file inside a project and using that.
+     *
+     * Otherwise it defaults to sending it to the <code>FABRIC8_DEFAULT_HUBOT_ROOM</code> environment variable
+     */
+    public static String notifyProject(TaskListener listener, FilePath workspace, String message) throws IOException, InterruptedException {
+        String room = getProjectRoom(listener, workspace);
+        return notify(listener, room, message);
+    }
+
+    public static String getProjectRoom(TaskListener listener, FilePath workspace) throws IOException, InterruptedException {
+        String room = DevOps.getProjectRoom(listener, workspace);
+        if (Strings.isNullOrBlank(room)) {
+            room = getEnvOrIfBlankDefault("FABRIC8_DEFAULT_HUBOT_ROOM", "fabric8_default");
+        }
+        return room;
     }
 }
