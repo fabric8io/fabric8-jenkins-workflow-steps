@@ -56,7 +56,7 @@ public class HubotApproveStep extends Fabric8Step {
 
         @Override
         public String getDisplayName() {
-            return "Sends a message and proceed instructions to the hubot chat inputId for a project";
+            return "Sends a message with proceed/abort instructions to the hubot chat room for a project";
         }
     }
 
