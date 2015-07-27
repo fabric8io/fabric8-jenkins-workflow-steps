@@ -53,3 +53,14 @@ The behaviour of this script is to:
 * stage the canary release to a staging environment
 * ask the user to prompt if it should be promoted to a production environment
 * if successful the release is promoted to production
+
+### parameterOrDefault
+
+Evaluates a build parameter value of the given name or returns a default value
+
+```
+def something = parameterOrDefault parameter: 'FOO', defaultValue: 'bar'
+echo "I have a value ${something}" 
+```
+This makes it really easy in a 1 liner to define a variable for an optional build parameter in a reusable workflow script which if the build parameter is not defined then you can provide a default value.
+

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+  <f:entry field="parameter" title="Build parameter name">
+    <f:textbox/>
+  </f:entry>
+  <f:entry field="defaultValue" title="Default value">
+    <f:textbox/>
+  </f:entry>
+</j:jelly>
+
+
