@@ -47,7 +47,7 @@ public class HubotClient {
             log(listener, "you must specify a message!");
             return null;
         }
-        HttpHost host = RestClient.getHttpHost(listener, "hubot-web-hook");
+        HttpHost host = RestClient.getHttpHost(listener, "hubot");
         if (host != null) {
             String roomWithSlugPrefix = room;
             if (roomWithSlugPrefix.startsWith("#")) {
