@@ -24,9 +24,7 @@
 
 
   <properties>
-<!--
-    <workflow.api.version>1.2</workflow.api.version>
--->
+    <jackson2.version>2.6.2</jackson2.version>
     <workflow.api.version>1.8</workflow.api.version>
   </properties>
 
@@ -102,6 +100,21 @@
       <version>2.3.1</version>
     </dependency>
 
+    <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>${jackson2.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-core</artifactId>
+        <version>${jackson2.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-annotations</artifactId>
+        <version>${jackson2.version}</version>
+    </dependency>
 
     <!-- testing -->
     <dependency>
