@@ -18,6 +18,7 @@ package org.jenkinsci.plugins.fabric8.rest;
 
 import hudson.Extension;
 import org.jenkinsci.plugins.fabric8.dto.BuildDTO;
+import org.jenkinsci.plugins.fabric8.dto.JobDTO;
 import org.jenkinsci.plugins.fabric8.dto.StageDTO;
 import org.jenkinsci.plugins.fabric8.support.Callback;
 import org.jenkinsci.plugins.fabric8.support.FlowNodes;
@@ -58,11 +59,12 @@ public class WorkflowJobAction extends ActionSupport<WorkflowJob> {
     public Object doStages() {
         final List<BuildDTO> answer = new ArrayList<BuildDTO>();
         WorkflowJob job = getTarget();
-        if (job != null) {
+        final JobDTO jobDTO = JobDTO.createJobDTO(job);
+        if (job != null && jobDTO != null) {
             WorkflowRun build = job.getLastBuild();
             while (build != null) {
                 final BuildDTO buildDTO = BuildDTO.createBuildDTO(job, build);
-                answer.add(buildDTO);
+                jobDTO.addBuild(buildDTO);
 
                 Callback<FlowNode> callback = new Callback<FlowNode>() {
 
@@ -79,7 +81,7 @@ public class WorkflowJobAction extends ActionSupport<WorkflowJob> {
                 build = build.getPreviousBuild();
             }
         }
-        return JSONHelper.jsonResponse(answer);
+        return JSONHelper.jsonResponse(jobDTO);
     }
 
 
