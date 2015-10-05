@@ -17,6 +17,8 @@
 package org.jenkinsci.plugins.fabric8.rest;
 
 import hudson.Extension;
+import org.jenkinsci.plugins.fabric8.dto.BuildDTO;
+import org.jenkinsci.plugins.fabric8.dto.NodeDTO;
 import org.jenkinsci.plugins.fabric8.dto.StageDTO;
 import org.jenkinsci.plugins.fabric8.support.Callback;
 import org.jenkinsci.plugins.fabric8.support.FlowNodes;
@@ -29,7 +31,6 @@ import org.kohsuke.stapler.StaplerRequest;
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -55,22 +56,37 @@ public class WorkflowRunAction extends ActionSupport<WorkflowRun> {
     }
 
     public Object doStages() {
-        final List<StageDTO> answer = new ArrayList<StageDTO>();
-        WorkflowRun target = getTarget();
-        if (target != null) {
+        WorkflowRun run = getTarget();
+        final BuildDTO buildDTO = BuildDTO.createBuildDTO(run.getParent(), run);
+        if (run != null) {
             Callback<FlowNode> callback = new Callback<FlowNode>() {
 
                 @Override
                 public void invoke(FlowNode node) {
                     StageDTO stage = StageDTO.createStageDTO(node);
                     if (stage != null) {
-                        answer.add(stage);
+                        buildDTO.addStage(stage);
                     }
                 }
             };
-            FlowNodes.forEach(target.getExecution(), callback);
+            FlowNodes.forEach(run.getExecution(), callback);
+            FlowNodes.sortInStageIdOrder(buildDTO.getStages());
         }
-        Collections.reverse(answer);
+        return JSONHelper.jsonResponse(buildDTO);
+    }
+
+    public Object doNodes() {
+        WorkflowRun run = getTarget();
+        List<NodeDTO> answer = new ArrayList<NodeDTO>();
+        if (run != null) {
+            List<FlowNode> nodes = FlowNodes.getSortedFlowNodes(run.getExecution());
+            for (FlowNode node : nodes) {
+                NodeDTO dto = NodeDTO.createNodeDTO(node);
+                if (dto != null) {
+                    answer.add(dto);
+                }
+            }
+        }
         return JSONHelper.jsonResponse(answer);
     }
 

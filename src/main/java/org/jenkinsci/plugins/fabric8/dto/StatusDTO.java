@@ -34,6 +34,9 @@ public enum StatusDTO {
 
     public static StatusDTO valueOf(FlowNode node, long startTime) {
         if (FlowNodes.isExecuted(node, startTime)) {
+            if (node.isRunning() && !node.getExecution().isComplete()) {
+                return PENDING;
+            }
             return valueOf(node.getError());
         } else {
             return NOT_STARTED;

@@ -16,83 +16,52 @@
  */
 package org.jenkinsci.plugins.fabric8.dto;
 
+import org.jenkinsci.plugins.fabric8.support.FlowNodes;
 import org.jenkinsci.plugins.workflow.actions.StageAction;
 import org.jenkinsci.plugins.workflow.actions.TimingAction;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 
-import java.io.IOException;
-
 /**
  */
-public class StageDTO extends DtoSupport {
-    private final String id;
-    private final String url;
+public class StageDTO extends NodeDTO {
     private final String stageName;
-    private final long startTime;
-    private final StatusDTO status;
-    private final ErrorDTO error;
 
     public static StageDTO createStageDTO(FlowNode node) {
         if (node != null) {
             StageAction action = node.getAction(StageAction.class);
             if (action != null) {
-                String url = null;
-                try {
-                    url = node.getUrl();
-                } catch (IOException e) {
-                    System.out.println("Failed to create node URL: " + e);
-                }
+                String url = FlowNodes.getNodeUrlOrNull(node);
                 long startTime = TimingAction.getStartTime(node);
-                StatusDTO status = StatusDTO.valueOf(node, startTime);
                 ErrorDTO error = ErrorDTO.createErrorDTO(node);
-                return new StageDTO(node.getId(), url, action.getStageName(), startTime, status, error);
+                FlowNode endNode = FlowNodes.getNextStageNode(node);
+                long duration = FlowNodes.getDuration(node, endNode);
+                if (endNode == null) {
+                    endNode = node;
+                }
+                StatusDTO status = StatusDTO.valueOf(endNode);
+                return new StageDTO(node.getId(), url, action.getStageName(), startTime, status, error, duration);
             }
         }
         return null;
     }
 
-    public StageDTO(String id, String url, String stageName, long startTime, StatusDTO status, ErrorDTO error) {
-        this.id = id;
-        this.url = url;
+    public StageDTO(String id, String url, String stageName, long startTime, StatusDTO status, ErrorDTO error, long duration) {
+        super(id, url, startTime, status, error, duration);
         this.stageName = stageName;
-        this.startTime = startTime;
-        this.status = status;
-        this.error = error;
     }
 
     @Override
     public String toString() {
         return "StageDTO{" +
-                "error=" + error +
-                ", id='" + id + '\'' +
-                ", url='" + url + '\'' +
+                ", id='" + getId() + '\'' +
+                ", url='" + getUrl() + '\'' +
                 ", stageName='" + stageName + '\'' +
-                ", startTime=" + startTime +
-                ", status=" + status +
+                ", status=" + getStatus() +
                 '}';
-    }
-
-    public String getId() {
-        return id;
     }
 
     public String getStageName() {
         return stageName;
     }
 
-    public String getUrl() {
-        return url;
-    }
-
-    public long getStartTime() {
-        return startTime;
-    }
-
-    public StatusDTO getStatus() {
-        return status;
-    }
-
-    public ErrorDTO getError() {
-        return error;
-    }
 }

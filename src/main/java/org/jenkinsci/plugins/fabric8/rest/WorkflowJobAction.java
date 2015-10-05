@@ -17,8 +17,14 @@
 package org.jenkinsci.plugins.fabric8.rest;
 
 import hudson.Extension;
+import org.jenkinsci.plugins.fabric8.dto.BuildDTO;
+import org.jenkinsci.plugins.fabric8.dto.StageDTO;
+import org.jenkinsci.plugins.fabric8.support.Callback;
+import org.jenkinsci.plugins.fabric8.support.FlowNodes;
 import org.jenkinsci.plugins.fabric8.support.JSONHelper;
+import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -47,6 +53,33 @@ public class WorkflowJobAction extends ActionSupport<WorkflowJob> {
 
     public Object doIndex() {
         return JSONHelper.jsonResponse(getTarget());
+    }
+
+    public Object doStages() {
+        final List<BuildDTO> answer = new ArrayList<BuildDTO>();
+        WorkflowJob job = getTarget();
+        if (job != null) {
+            WorkflowRun build = job.getLastBuild();
+            while (build != null) {
+                final BuildDTO buildDTO = BuildDTO.createBuildDTO(job, build);
+                answer.add(buildDTO);
+
+                Callback<FlowNode> callback = new Callback<FlowNode>() {
+
+                    @Override
+                    public void invoke(FlowNode node) {
+                        StageDTO stage = StageDTO.createStageDTO(node);
+                        if (stage != null) {
+                            buildDTO.addStage(stage);
+                        }
+                    }
+                };
+                FlowNodes.forEach(build.getExecution(), callback);
+                FlowNodes.sortInStageIdOrder(buildDTO.getStages());
+                build = build.getPreviousBuild();
+            }
+        }
+        return JSONHelper.jsonResponse(answer);
     }
 
 

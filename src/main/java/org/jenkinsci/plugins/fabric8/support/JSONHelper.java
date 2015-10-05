@@ -23,6 +23,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
 import javax.servlet.ServletException;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 /**
@@ -39,7 +40,9 @@ public class JSONHelper {
             @Override
             public void generateResponse(StaplerRequest request, StaplerResponse response, Object node) throws IOException, ServletException {
                 response.setContentType("application/json");
-                objectMapper.writeValue(response.getOutputStream(), payload);
+                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                objectMapper.writeValue(buffer, payload);
+                response.getOutputStream().write(buffer.toByteArray());
             }
         };
     }
