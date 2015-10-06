@@ -17,7 +17,9 @@
 package org.jenkinsci.plugins.fabric8.dto;
 
 import com.google.common.base.Objects;
+import hudson.model.Cause;
 import hudson.model.Run;
+import hudson.scm.ChangeLogSet;
 import org.jenkinsci.plugins.fabric8.support.WorkflowRuns;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -40,7 +42,9 @@ public class BuildDTO {
     private final String summary;
     private final String url;
     private final Map<String, Object> parameters;
+    private List<Cause> causes;
     private List<StageDTO> stages = new ArrayList<StageDTO>();
+    private List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets;
 
     public BuildDTO(String id, int number, String displayName, boolean building, String result, long duration, long estimatedDuration, long timeInMillis, String summary, String url, Map<String, Object> parameters) {
         this.id = id;
@@ -65,9 +69,12 @@ public class BuildDTO {
         String result = WorkflowRuns.getResultText(build);
         Map<String,Object> parameters = WorkflowRuns.getBuildParameters(build);
 
-        return new BuildDTO(build.getId(), build.getNumber(), build.getDisplayName(), build.isBuilding(),
+        BuildDTO dto = new BuildDTO(build.getId(), build.getNumber(), build.getDisplayName(), build.isBuilding(),
                 result, build.getDuration(), build.getEstimatedDuration(),
                 build.getTimeInMillis(), summaryMessage, build.getUrl(), parameters);
+        dto.setCauses(build.getCauses());
+        dto.setChangeSets(build.getChangeSets());
+        return dto;
     }
 
     @Override
@@ -138,5 +145,21 @@ public class BuildDTO {
 
     public Map<String, Object> getParameters() {
         return parameters;
+    }
+
+    public List<Cause> getCauses() {
+        return causes;
+    }
+
+    public void setCauses(List<Cause> causes) {
+        this.causes = causes;
+    }
+
+    public List<ChangeLogSet<? extends ChangeLogSet.Entry>> getChangeSets() {
+        return changeSets;
+    }
+
+    public void setChangeSets(List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets) {
+        this.changeSets = changeSets;
     }
 }
