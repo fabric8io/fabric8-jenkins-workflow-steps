@@ -16,6 +16,8 @@
  */
 package org.jenkinsci.plugins.fabric8.rest;
 
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import hudson.Extension;
 import org.jenkinsci.plugins.fabric8.dto.BuildDTO;
 import org.jenkinsci.plugins.fabric8.dto.JobDTO;
@@ -32,6 +34,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -57,12 +60,52 @@ public class WorkflowJobAction extends ActionSupport<WorkflowJob> {
     }
 
     public Object doStages() {
-        final List<BuildDTO> answer = new ArrayList<BuildDTO>();
+        Predicate<WorkflowRun> predicate = Predicates.alwaysTrue();
+        List<WorkflowRun> runs = filterRuns(predicate);
+        return filterStages(runs);
+    }
+
+    public Object doPendingStages() {
+        Predicate<WorkflowRun> predicate = new Predicate<WorkflowRun>() {
+            @Override
+            public boolean apply(WorkflowRun run) {
+                return run != null && run.isBuilding();
+            }
+        };
+        // if there are no pending lets just return the last run
+        List<WorkflowRun> runs = filterRuns(predicate);
+        if (runs.isEmpty()) {
+            WorkflowJob job = getTarget();
+            if (job != null) {
+                WorkflowRun build = job.getLastBuild();
+                if (build != null) {
+                    runs = Collections.singletonList(build);
+                }
+            }
+        }
+        return filterStages(runs);
+    }
+
+    protected List<WorkflowRun> filterRuns(Predicate<WorkflowRun> predicate) {
+        final List<WorkflowRun> answer = new ArrayList<WorkflowRun>();
+        WorkflowJob job = getTarget();
+        if (job != null) {
+            WorkflowRun build = job.getLastBuild();
+            while (build != null) {
+                if (predicate.apply(build)) {
+                    answer.add(build);
+                }
+                build = build.getPreviousBuild();
+            }
+        }
+        return answer;
+    }
+
+    protected Object filterStages(Iterable<WorkflowRun> runs) {
         WorkflowJob job = getTarget();
         final JobDTO jobDTO = JobDTO.createJobDTO(job);
         if (job != null && jobDTO != null) {
-            WorkflowRun build = job.getLastBuild();
-            while (build != null) {
+            for (WorkflowRun build : runs) {
                 final BuildDTO buildDTO = BuildDTO.createBuildDTO(job, build);
                 jobDTO.addBuild(buildDTO);
 
@@ -78,7 +121,6 @@ public class WorkflowJobAction extends ActionSupport<WorkflowJob> {
                 };
                 FlowNodes.forEach(build.getExecution(), callback);
                 FlowNodes.sortInStageIdOrder(buildDTO.getStages());
-                build = build.getPreviousBuild();
             }
         }
         return JSONHelper.jsonResponse(jobDTO);
