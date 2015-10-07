@@ -24,6 +24,7 @@
 
 
   <properties>
+    <git.version>2.4.0</git.version>
     <jackson2.version>2.6.2</jackson2.version>
     <workflow.api.version>1.8</workflow.api.version>
   </properties>
@@ -88,6 +89,11 @@
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-api</artifactId>
       <version>${workflow.api.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>git</artifactId>
+      <version>${git.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>

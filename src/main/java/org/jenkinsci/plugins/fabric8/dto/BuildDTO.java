@@ -17,9 +17,7 @@
 package org.jenkinsci.plugins.fabric8.dto;
 
 import com.google.common.base.Objects;
-import hudson.model.Cause;
 import hudson.model.Run;
-import hudson.scm.ChangeLogSet;
 import org.jenkinsci.plugins.fabric8.support.WorkflowRuns;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -30,7 +28,7 @@ import java.util.Map;
 
 /**
  */
-public class BuildDTO {
+public class BuildDTO extends DtoSupport {
     private final String id;
     private final int number;
     private final String displayName;
@@ -42,9 +40,9 @@ public class BuildDTO {
     private final String summary;
     private final String url;
     private final Map<String, Object> parameters;
-    private List<Cause> causes;
     private List<StageDTO> stages = new ArrayList<StageDTO>();
-    private List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets;
+    private List<GitChangeSetDTO> changeList;
+    private List<CauseDTO> causes;
 
     public BuildDTO(String id, int number, String displayName, boolean building, String result, long duration, long estimatedDuration, long timeInMillis, String summary, String url, Map<String, Object> parameters) {
         this.id = id;
@@ -72,8 +70,8 @@ public class BuildDTO {
         BuildDTO dto = new BuildDTO(build.getId(), build.getNumber(), build.getDisplayName(), build.isBuilding(),
                 result, build.getDuration(), build.getEstimatedDuration(),
                 build.getTimeInMillis(), summaryMessage, build.getUrl(), parameters);
-        dto.setCauses(build.getCauses());
-        dto.setChangeSets(build.getChangeSets());
+        dto.setCauses(CauseDTO.createCauseDTOList(build.getCauses()));
+        dto.setChangeList(GitChangeSetDTO.createGitChangeSetDTOList(build.getChangeSets()));
         return dto;
     }
 
@@ -147,19 +145,20 @@ public class BuildDTO {
         return parameters;
     }
 
-    public List<Cause> getCauses() {
-        return causes;
+
+    public void setChangeList(List<GitChangeSetDTO> changeList) {
+        this.changeList = changeList;
     }
 
-    public void setCauses(List<Cause> causes) {
+    public List<GitChangeSetDTO> getChangeList() {
+        return changeList;
+    }
+
+    public void setCauses(List<CauseDTO> causes) {
         this.causes = causes;
     }
 
-    public List<ChangeLogSet<? extends ChangeLogSet.Entry>> getChangeSets() {
-        return changeSets;
-    }
-
-    public void setChangeSets(List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets) {
-        this.changeSets = changeSets;
+    public List<CauseDTO> getCauses() {
+        return causes;
     }
 }

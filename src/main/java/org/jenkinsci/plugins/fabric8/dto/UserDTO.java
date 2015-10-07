@@ -16,60 +16,54 @@
  */
 package org.jenkinsci.plugins.fabric8.dto;
 
-import org.jenkinsci.plugins.workflow.job.WorkflowJob;
-
-import java.util.ArrayList;
-import java.util.List;
+import hudson.model.User;
 
 /**
  */
-public class JobDTO extends DtoSupport{
+public class UserDTO extends DtoSupport {
     private final String displayName;
+    private final String id;
     private final String url;
-    private final long estimatedDuration;
-    private final boolean building;
-    private List<BuildDTO> builds = new ArrayList<BuildDTO>();
+    private final String fullName;
+    private final String description;
 
-    public static JobDTO createJobDTO(WorkflowJob job) {
-        if (job != null) {
-            return new JobDTO(job.getDisplayName(), job.getUrl(), job.getEstimatedDuration(), job.isBuilding());
+    public static UserDTO createUserDTO(User user) {
+        if (user != null) {
+            return new UserDTO(user);
         }
         return null;
     }
 
-    public JobDTO(String displayName, String url, long estimatedDuration, boolean building) {
-        this.displayName = displayName;
-        this.url = url;
-        this.estimatedDuration = estimatedDuration;
-        this.building = building;
+    public UserDTO(User user) {
+        this.displayName = user.getDisplayName();
+        this.id = user.getId();
+        this.url = user.getUrl();
+        this.fullName = user.getFullName();
+        this.description = user.getDescription();
     }
 
     @Override
     public String toString() {
-        return "JobDTO{" +
-                "displayName='" + displayName + '\'' +
-                ", url='" + url + '\'' +
+        return "UserDTO{" +
+                "id='" + id + '\'' +
+                ", displayName='" + displayName + '\'' +
                 '}';
     }
 
-    public void addBuild(BuildDTO buildDTO) {
-        builds.add(buildDTO);
-    }
-
-    public boolean isBuilding() {
-        return building;
-    }
-
-    public List<BuildDTO> getBuilds() {
-        return builds;
+    public String getDescription() {
+        return description;
     }
 
     public String getDisplayName() {
         return displayName;
     }
 
-    public long getEstimatedDuration() {
-        return estimatedDuration;
+    public String getFullName() {
+        return fullName;
+    }
+
+    public String getId() {
+        return id;
     }
 
     public String getUrl() {
