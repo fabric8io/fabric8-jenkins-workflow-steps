@@ -17,7 +17,6 @@
 package org.jenkinsci.plugins.fabric8.rest;
 
 import hudson.Extension;
-import hudson.console.AnnotatedLargeText;
 import org.jenkinsci.plugins.fabric8.dto.BuildDTO;
 import org.jenkinsci.plugins.fabric8.dto.NodeDTO;
 import org.jenkinsci.plugins.fabric8.dto.StageDTO;
@@ -30,7 +29,6 @@ import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 
 import javax.annotation.Nonnull;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -90,16 +88,6 @@ public class WorkflowRunAction extends ActionSupport<WorkflowRun> {
             }
         }
         return JSONHelper.jsonResponse(answer);
-    }
-
-    public Object doLog(Integer maxLineParam) throws IOException {
-        System.out.println("Invoke log with maxLineParam: " + maxLineParam);
-        WorkflowRun run = getTarget();
-        // TODO take this from a query argument
-        int maxLines = 5000;
-        AnnotatedLargeText logText = run.getLogText();
-        List<String> lines = run.getLog(maxLines);
-        return JSONHelper.jsonResponse(lines);
     }
 
     @Nonnull
