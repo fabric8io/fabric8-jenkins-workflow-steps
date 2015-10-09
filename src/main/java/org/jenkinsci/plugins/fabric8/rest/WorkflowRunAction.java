@@ -85,6 +85,14 @@ public class WorkflowRunAction extends ActionSupport<WorkflowRun> {
     }
 
     public Object doLog() throws IOException {
+        return createLogResponse(false);
+    }
+
+    public Object doLogHtml() throws IOException {
+        return createLogResponse(true);
+    }
+
+    protected Object createLogResponse(boolean html) throws IOException {
         WorkflowRun run = getTarget();
         AnnotatedLargeText logText = null;
         boolean building = false;
@@ -93,7 +101,7 @@ public class WorkflowRunAction extends ActionSupport<WorkflowRun> {
             logText = AnnotatedLargeTexts.createFromRun(run);
             building = run.isBuilding();
         }
-        return LogHelper.jsonResponse(logText, building);
+        return LogHelper.jsonResponse(logText, building, html);
     }
 
 

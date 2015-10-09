@@ -127,7 +127,27 @@ public class AnnotatedLargeText<T> extends LargeText {
         if(rsp != null) {
             rsp.setHeader("X-ConsoleAnnotator", new String(Base64.encode(baos.toByteArray())));
         }
-
         return r;
+    }
+
+    @Override
+    public long writeLogTo(long start, int size, Writer w) throws IOException {
+        if (isHtml()) {
+            ConsoleAnnotationOutputStream caw = new ConsoleAnnotationOutputStream(w, this.createAnnotator(Stapler.getCurrentRequest()), this.context, this.charset);
+            long r = super.writeLogTo(start, size, caw);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            Cipher sym = PASSING_ANNOTATOR.encrypt();
+            ObjectOutputStream oos = new ObjectOutputStream(new GZIPOutputStream(new CipherOutputStream(baos, sym)));
+            oos.writeLong(System.currentTimeMillis());
+            oos.writeObject(caw.getConsoleAnnotator());
+            oos.close();
+            StaplerResponse rsp = Stapler.getCurrentResponse();
+            if(rsp != null) {
+                rsp.setHeader("X-ConsoleAnnotator", new String(Base64.encode(baos.toByteArray())));
+            }
+            return r;
+        } else {
+            return super.writeLogTo(start, size, w);
+        }
     }
 }

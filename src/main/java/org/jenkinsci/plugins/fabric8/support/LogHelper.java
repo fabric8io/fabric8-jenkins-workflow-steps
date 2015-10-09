@@ -33,8 +33,12 @@ public class LogHelper {
     public static final int DEFAULT_SIZE = 1024 * 10;
     public static final int MAX_SIZE = 1024 * 300;
 
-    public static HttpResponse jsonResponse(final AnnotatedLargeText text, boolean building) throws IOException {
+    public static HttpResponse jsonResponse(final AnnotatedLargeText text, boolean building, boolean html) throws IOException {
         StaplerRequest req = Stapler.getCurrent().getCurrentRequest();
+        if (html) {
+            req.setAttribute("html", Boolean.valueOf(true));
+        }
+
 
         long start = getLongParameter(req, "start", 0);
         long first = getLongParameter(req, "first", -1);
