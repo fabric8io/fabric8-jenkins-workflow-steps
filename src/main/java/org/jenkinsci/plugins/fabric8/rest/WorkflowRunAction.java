@@ -23,12 +23,21 @@ import org.jenkinsci.plugins.fabric8.dto.StageDTO;
 import org.jenkinsci.plugins.fabric8.support.Callback;
 import org.jenkinsci.plugins.fabric8.support.FlowNodes;
 import org.jenkinsci.plugins.fabric8.support.JSONHelper;
+import org.jenkinsci.plugins.fabric8.support.LogHelper;
+import org.jenkinsci.plugins.fabric8.support.hack.AnnotatedLargeText;
+import org.jenkinsci.plugins.fabric8.support.hack.AnnotatedLargeTexts;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.framework.io.CharSpool;
+import org.kohsuke.stapler.framework.io.LineEndNormalizingWriter;
 
 import javax.annotation.Nonnull;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -74,6 +83,19 @@ public class WorkflowRunAction extends ActionSupport<WorkflowRun> {
         }
         return JSONHelper.jsonResponse(buildDTO);
     }
+
+    public Object doLog() throws IOException {
+        WorkflowRun run = getTarget();
+        AnnotatedLargeText logText = null;
+        boolean building = false;
+        if (run != null) {
+            //logText = run.getLogText();
+            logText = AnnotatedLargeTexts.createFromRun(run);
+            building = run.isBuilding();
+        }
+        return LogHelper.jsonResponse(logText, building);
+    }
+
 
     public Object doNodes() {
         WorkflowRun run = getTarget();

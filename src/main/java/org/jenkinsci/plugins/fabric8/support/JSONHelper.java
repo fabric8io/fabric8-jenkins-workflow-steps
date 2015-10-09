@@ -35,6 +35,10 @@ public class JSONHelper {
         objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
     }
 
+    public static ObjectMapper getObjectMapper() {
+        return objectMapper;
+    }
+
     public static HttpResponse jsonResponse(final Object payload) {
         return new HttpResponse() {
             @Override
