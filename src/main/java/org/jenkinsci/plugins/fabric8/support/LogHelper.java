@@ -31,21 +31,16 @@ import java.io.StringWriter;
 public class LogHelper {
 
     public static final int DEFAULT_SIZE = 1024 * 10;
-    public static final int MAX_SIZE = 1024 * 1024;
+    public static final int MAX_SIZE = 1024 * 300;
 
     public static HttpResponse jsonResponse(final AnnotatedLargeText text, boolean building) throws IOException {
         StaplerRequest req = Stapler.getCurrent().getCurrentRequest();
-        long start = 0;
-        int size = DEFAULT_SIZE;
 
-        String startText = req.getParameter("start");
-        if (startText != null) {
-            start = Long.parseLong(startText);
-        }
-        String sizeText = req.getParameter("size");
-        if (sizeText != null) {
-            size = Integer.parseInt(sizeText);
-        }
+        long start = getLongParameter(req, "start", 0);
+        long first = getLongParameter(req, "first", -1);
+        int size = getIntParameter(req, "size", DEFAULT_SIZE);
+        boolean tail = getBoolParameter(req, "tail");
+
         if (text.length() < start) {
             start = 0;  // text rolled over
         }
@@ -55,12 +50,66 @@ public class LogHelper {
         if (size > MAX_SIZE) {
             size = MAX_SIZE;
         }
+        boolean backwards = false;
+        long logLength = text.length();
+        if (tail) {
+            if (start == logLength) {
+                // lets return earlier data!
+                // if we've data to be read before 'first'
+                if (first > 0) {
+                    backwards = true;
+                    start = first - size;
+                    if (first < size) {
+                        // lets not return too much data as we're getting the first little chunk
+                        size = (int) first;
+                    }
+                }
+            }
+            // lets support jumping to the end of the file if its long
+            if (start == 0) {
+                long end = start + size;
+                if (end < logLength) {
+                    start = logLength - size;
+                }
+            }
+        }
+        if (start < 0) {
+            start = 0;
+        }
         StringWriter buffer = new StringWriter();
         long textSize = text.writeLogTo(start, size, new LineEndNormalizingWriter(buffer));
         boolean completed = text.isComplete();
-        long logLength = text.length();
-        LogsDTO logsDTO = new LogsDTO(completed, textSize, logLength);
+        long returnedLength = textSize - start;
+        LogsDTO logsDTO = new LogsDTO(completed, start, returnedLength, backwards, logLength);
         logsDTO.setLogText(buffer.toString());
         return JSONHelper.jsonResponse(logsDTO);
+    }
+
+    public static int getIntParameter(StaplerRequest req, String name, int defaultValue) {
+        String text = req.getParameter(name);
+        if (isNotBlank(text)) {
+            return Integer.parseInt(text);
+        }
+        return defaultValue;
+    }
+
+    public static long getLongParameter(StaplerRequest req, String name, int defaultValue) {
+        String text = req.getParameter(name);
+        if (isNotBlank(text)) {
+            return Long.parseLong(text);
+        }
+        return defaultValue;
+    }
+
+    public static boolean getBoolParameter(StaplerRequest req, String name) {
+        String text = req.getParameter(name);
+        if (isNotBlank(text) && (text.toLowerCase().startsWith("t") || text.equals("1"))) {
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean isNotBlank(String text) {
+        return text != null && text.length() > 0;
     }
 }

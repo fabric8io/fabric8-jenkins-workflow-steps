@@ -16,6 +16,8 @@
  */
 package org.jenkinsci.plugins.fabric8.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -24,14 +26,18 @@ import java.util.List;
  */
 public class LogsDTO extends DtoSupport  {
     private final boolean completed;
-    private final long textSize;
+    private final long start;
+    private final long returnedLength;
+    private final boolean backwards;
     private final long logLength;
     private List<String> lines;
     private boolean lineSplit;
 
-    public LogsDTO(boolean completed, long textSize, long logLength) {
+    public LogsDTO(boolean completed, long start, long returnedLength, boolean backwards, long logLength) {
         this.completed = completed;
-        this.textSize = textSize;
+        this.start = start;
+        this.returnedLength = returnedLength;
+        this.backwards = backwards;
         this.logLength = logLength;
     }
 
@@ -39,8 +45,8 @@ public class LogsDTO extends DtoSupport  {
         return completed;
     }
 
-    public long getTextSize() {
-        return textSize;
+    public long getReturnedLength() {
+        return returnedLength;
     }
 
     public long getLogLength() {
@@ -50,15 +56,30 @@ public class LogsDTO extends DtoSupport  {
     public void setLogText(String text) {
         setLines(new ArrayList<String>());
         if (text != null && text.length() > 0) {
-            lineSplit = isCompleted() ? false : true;
+            lineSplit = !backwards && isCompleted() ? false : true;
             String[] split = text.split("\n");
             if (split != null && split.length > 0) {
                 setLines(Arrays.asList(split));
             }
-            if (text.endsWith("\n") || text.endsWith("\n\r")) {
-                lineSplit = false;
+            if (backwards) {
+                if (text.startsWith("\n") || text.startsWith("\n\r")) {
+                    lineSplit = false;
+                }
+            } else {
+                if (text.endsWith("\n") || text.endsWith("\n\r")) {
+                    lineSplit = false;
+                }
             }
         }
+    }
+
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    public long getStart() {
+        return start;
+    }
+
+    public boolean isBackwards() {
+        return backwards;
     }
 
     public boolean isLineSplit() {
