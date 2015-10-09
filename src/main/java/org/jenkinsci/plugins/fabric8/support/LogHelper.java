@@ -60,7 +60,7 @@ public class LogHelper {
         boolean completed = text.isComplete();
         long logLength = text.length();
         LogsDTO logsDTO = new LogsDTO(completed, textSize, logLength);
-        logsDTO.setLogText( buffer.toString());
+        logsDTO.setLogText(buffer.toString());
         return JSONHelper.jsonResponse(logsDTO);
     }
 }
