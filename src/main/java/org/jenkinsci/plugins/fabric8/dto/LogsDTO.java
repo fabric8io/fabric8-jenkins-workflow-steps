@@ -27,6 +27,7 @@ public class LogsDTO extends DtoSupport  {
     private final long textSize;
     private final long logLength;
     private List<String> lines;
+    private boolean lineSplit;
 
     public LogsDTO(boolean completed, long textSize, long logLength) {
         this.completed = completed;
@@ -48,12 +49,20 @@ public class LogsDTO extends DtoSupport  {
 
     public void setLogText(String text) {
         setLines(new ArrayList<String>());
-        if (text != null) {
+        if (text != null && text.length() > 0) {
+            lineSplit = isCompleted() ? false : true;
             String[] split = text.split("\n");
             if (split != null && split.length > 0) {
                 setLines(Arrays.asList(split));
             }
+            if (text.endsWith("\n") || text.endsWith("\n\r")) {
+                lineSplit = false;
+            }
         }
+    }
+
+    public boolean isLineSplit() {
+        return lineSplit;
     }
 
     public void setLines(List<String> lines) {
