@@ -100,6 +100,30 @@ public class FlowNodes {
         return null;
     }
 
+    public static List<FlowNode> getSortedStageNodes(FlowExecution execution) {
+        return getSortedStageNodes(execution.getCurrentHeads());
+    }
+
+    public static List<FlowNode> getSortedStageNodes(final List<FlowNode> flowNodes) {
+        final List<FlowNode> answer = new ArrayList<FlowNode>();
+        forEach(flowNodes, new Callback<FlowNode>() {
+            @Override
+            public void invoke(FlowNode node) {
+                if (isStageNode(node)) {
+                    for (FlowNode old : answer) {
+                        if (Objects.equal(old.getId(), node.getId())) {
+                            // already added
+                            return;
+                        }
+                    }
+                    answer.add(node);
+                }
+            }
+        });
+        sortInNodeIdOrder(answer);
+        return answer;
+    }
+
     public static List<FlowNode> getSortedFlowNodes(FlowExecution execution) {
         return getSortedFlowNodes(execution.getCurrentHeads());
     }

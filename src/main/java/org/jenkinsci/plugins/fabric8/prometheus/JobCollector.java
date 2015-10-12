@@ -21,22 +21,32 @@ import hudson.model.Job;
 import hudson.model.Run;
 import hudson.util.RunList;
 import io.prometheus.client.Collector;
+import io.prometheus.client.Histogram;
 import jenkins.model.Jenkins;
+import org.jenkinsci.plugins.fabric8.support.FlowNodes;
+import org.jenkinsci.plugins.workflow.graph.FlowNode;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import static org.jenkinsci.plugins.fabric8.support.FlowNodes.getSortedStageNodes;
 
 /**
  */
 public class JobCollector extends Collector {
+    String fullname = "jenkins_builds";
+    private double[] buildHistogramBuckets = { 1000, 30000, 60000 };
+
     @Override
     public List<MetricFamilySamples> collect() {
         List<MetricFamilySamples> samples = new ArrayList<MetricFamilySamples>();
 
         Jenkins jenkins = Jenkins.getInstance();
-        StringBuilder buffer = new StringBuilder();
         if (jenkins != null) {
             List<Item> items = jenkins.getAllItems();
             if (items != null) {
@@ -54,9 +64,10 @@ public class JobCollector extends Collector {
     }
 
     protected void appendJobMetrics(List<MetricFamilySamples> mfsList, Jenkins jenkins, Item item, Job job) {
-        List<String> labelNames = Arrays.asList("job");
-        List<String> labelValues = Arrays.asList(job.getName());
-        String fullname = "jenkins_builds";
+        String[] labelNameArray = {"job"};
+        String[] labelValueArray = {job.getName()};
+        List<String> labelNames = Arrays.asList(labelNameArray);
+        List<String> labelValues = Arrays.asList(labelValueArray);
 
         List<MetricFamilySamples.Sample> samples = new ArrayList<MetricFamilySamples.Sample>();
 /*
@@ -65,6 +76,15 @@ public class JobCollector extends Collector {
             samples.add(new MetricFamilySamples.Sample(fullname + "_lastBuildTime", labelNames, labelValues, lastCompletedBuild.getDuration()));
         }
 */
+        Histogram histogram = Histogram.build().
+                name(fullname + "_duration_histogram").
+                labelNames(labelNameArray).
+                help("Histogram of Jenkins build times by job").
+                buckets(buildHistogramBuckets).
+                create();
+
+        Map<String,Histogram> jobHistograms = new HashMap<String, Histogram>();
+
         long count = 0;
         long duration = 0;
         RunList<Run> builds = job.getBuilds();
@@ -72,15 +92,51 @@ public class JobCollector extends Collector {
             for (Run build : builds) {
                 if (!build.isBuilding()) {
                     count++;
-                    duration += build.getDuration();
+                    long buildDuration = build.getDuration();
+                    duration += buildDuration;
+
+                    histogram.labels(labelValueArray).observe(buildDuration);
+
+                    if (build instanceof WorkflowRun) {
+                        WorkflowRun workflowRun = (WorkflowRun) build;
+                        List<FlowNode> stages = getSortedStageNodes(workflowRun.getExecution());
+                        for (FlowNode stage : stages) {
+                            observeStage(jobHistograms, job, build, stage);
+                        }
+                    }
                 }
             }
         }
-        samples.add(new MetricFamilySamples.Sample(fullname + "_buildTime_sum", labelNames, labelValues, duration));
-        samples.add(new MetricFamilySamples.Sample(fullname + "_buildTime_count", labelNames, labelValues, count));
-
+        samples.add(new MetricFamilySamples.Sample(fullname + "_duration_milliseconds_sum", labelNames, labelValues, duration));
+        samples.add(new MetricFamilySamples.Sample(fullname + "_duration_milliseconds_count", labelNames, labelValues, count));
         MetricFamilySamples mfs = new MetricFamilySamples(fullname, Type.SUMMARY, "Jenkins build times", samples);
+        Collection<Histogram> histograms = jobHistograms.values();
+        for (Histogram stageHistograms : jobHistograms.values()) {
+            mfsList.addAll(stageHistograms.collect());
+        }
         mfsList.add(mfs);
+
+        mfsList.addAll(histogram.collect());
+    }
+
+    private void observeStage(Map<String, Histogram> histogramMap, Job job, Run build, FlowNode stage) {
+        String jobName = job.getName();
+        String stageName = stage.getDisplayName();
+        String[] labelNameArray = {"job", "stage"};
+        String[] labelValueArray = {jobName, stageName};
+
+        String key = jobName + "_" + stageName;
+        Histogram histogram = histogramMap.get(key);
+        if (histogram == null) {
+            histogram = Histogram.build().name(fullname + "_stage_duration_milliseconds_histogram").
+                            labelNames(labelNameArray).
+                    help("Histogram of Jenkins build times by job and stage").
+                    buckets(buildHistogramBuckets).
+                    create();
+            histogramMap.put(key, histogram);
+        }
+        long duration = FlowNodes.getStageDuration(stage);
+        histogram.labels(labelValueArray).observe(duration);
     }
 
 }

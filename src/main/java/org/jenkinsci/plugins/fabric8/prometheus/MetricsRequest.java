@@ -24,7 +24,7 @@ import org.kohsuke.stapler.StaplerResponse;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
-import java.io.Writer;
+import java.io.StringWriter;
 
 /**
  */
@@ -36,10 +36,10 @@ public class MetricsRequest {
                 response.setStatus(StaplerResponse.SC_OK);
                 response.setContentType(TextFormat.CONTENT_TYPE_004);
 
-                Writer writer = response.getWriter();
-                TextFormat.write004(writer, collectorRegistry.metricFamilySamples());
-                writer.flush();
-                writer.close();
+                StringWriter buffer = new StringWriter();
+                TextFormat.write004(buffer, collectorRegistry.metricFamilySamples());
+                buffer.close();
+                response.getWriter().write(buffer.toString());
             }
         };
     }
