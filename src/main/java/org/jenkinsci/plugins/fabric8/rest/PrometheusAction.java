@@ -17,22 +17,15 @@
 package org.jenkinsci.plugins.fabric8.rest;
 
 import hudson.Extension;
-import hudson.model.Job;
 import hudson.model.UnprotectedRootAction;
 import io.prometheus.client.CollectorRegistry;
-import org.jenkinsci.plugins.fabric8.dto.JobMetricDTO;
 import org.jenkinsci.plugins.fabric8.prometheus.JobCollector;
-import org.jenkinsci.plugins.fabric8.support.Callback;
-import org.jenkinsci.plugins.fabric8.support.JSONHelper;
-import org.jenkinsci.plugins.fabric8.support.Jobs;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.jenkinsci.plugins.fabric8.prometheus.MetricsRequest;
 
 /**
  */
 @Extension
-public class MetricsAction implements UnprotectedRootAction {
+public class PrometheusAction implements UnprotectedRootAction {
     private CollectorRegistry collectorRegistry;
     private JobCollector jobCollector = new JobCollector();
 
@@ -43,25 +36,19 @@ public class MetricsAction implements UnprotectedRootAction {
 
     @Override
     public String getDisplayName() {
-        return "Fabric8 Metrics";
+        return "Prometheus Metrics Exporter";
     }
 
     @Override
     public String getUrlName() {
-        return "fabric8";
+        return "prometheus";
     }
 
-    public Object doMetrics() {
-        final List<JobMetricDTO> answer = new ArrayList<JobMetricDTO>();
-        Jobs.forEachJob(new Callback<Job>() {
-            @Override
-            public void invoke(Job job) {
-                JobMetricDTO dto = JobMetricDTO.createJobMetricsDTO(job);
-                if (dto != null) {
-                    answer.add(dto);
-                }
-            }
-        });
-        return JSONHelper.jsonResponse(answer);
+    public Object doIndex() {
+        if (collectorRegistry == null) {
+            collectorRegistry = CollectorRegistry.defaultRegistry;
+            collectorRegistry.register(jobCollector);
+        }
+        return MetricsRequest.jsonResponse(collectorRegistry);
     }
 }

@@ -18,7 +18,7 @@ package org.jenkinsci.plugins.fabric8.dto;
 
 import com.google.common.base.Objects;
 import hudson.model.Run;
-import org.jenkinsci.plugins.fabric8.support.WorkflowRuns;
+import org.jenkinsci.plugins.fabric8.support.Runs;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 
@@ -64,8 +64,8 @@ public class BuildDTO extends DtoSupport {
         }
         Run.Summary summary = build.getBuildStatusSummary();
         String summaryMessage = (summary != null) ? summary.message : null;
-        String result = WorkflowRuns.getResultText(build);
-        Map<String,Object> parameters = WorkflowRuns.getBuildParameters(build);
+        String result = Runs.getResultText(build);
+        Map<String,Object> parameters = Runs.getBuildParameters(build);
 
         BuildDTO dto = new BuildDTO(build.getId(), build.getNumber(), build.getDisplayName(), build.isBuilding(),
                 result, build.getDuration(), build.getEstimatedDuration(),

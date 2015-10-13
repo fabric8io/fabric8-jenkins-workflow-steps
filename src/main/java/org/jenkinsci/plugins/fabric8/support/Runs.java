@@ -19,7 +19,7 @@ package org.jenkinsci.plugins.fabric8.support;
 import hudson.model.ParameterValue;
 import hudson.model.ParametersAction;
 import hudson.model.Result;
-import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import hudson.model.Run;
 
 import java.util.HashMap;
 import java.util.List;
@@ -27,8 +27,17 @@ import java.util.Map;
 
 /**
  */
-public class WorkflowRuns {
-    public static String getResultText(WorkflowRun run) {
+public class Runs {
+    /**
+     * Returns true if we should include this build in metrics.
+     *
+     * By default this returns true if the build has completed
+     */
+    public static boolean includeBuildInMetrics(Run build) {
+        return !build.isBuilding();
+    }
+
+    public static String getResultText(Run run) {
         if (run != null) {
             Result result = run.getResult();
             if (result != null) {
@@ -38,7 +47,7 @@ public class WorkflowRuns {
         return null;
     }
 
-    public static Map<String, Object> getBuildParameters(WorkflowRun build) {
+    public static Map<String, Object> getBuildParameters(Run build) {
         List<ParametersAction> actions = build.getActions(ParametersAction.class);
         if (actions != null) {
             Map<String, Object> answer = new HashMap<String, Object>();
