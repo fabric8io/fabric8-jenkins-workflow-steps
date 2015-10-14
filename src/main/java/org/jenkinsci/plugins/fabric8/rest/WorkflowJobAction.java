@@ -21,6 +21,7 @@ import com.google.common.base.Predicates;
 import hudson.Extension;
 import org.jenkinsci.plugins.fabric8.dto.BuildDTO;
 import org.jenkinsci.plugins.fabric8.dto.JobDTO;
+import org.jenkinsci.plugins.fabric8.dto.JobMetricDTO;
 import org.jenkinsci.plugins.fabric8.dto.StageDTO;
 import org.jenkinsci.plugins.fabric8.support.Callback;
 import org.jenkinsci.plugins.fabric8.support.FlowNodes;
@@ -84,6 +85,11 @@ public class WorkflowJobAction extends ActionSupport<WorkflowJob> {
             }
         }
         return filterStages(runs);
+    }
+
+    public Object doMetrics() {
+        JobMetricDTO dto = JobMetricDTO.createJobMetricsDTO(getTarget());
+        return JSONHelper.jsonResponse(dto);
     }
 
     protected List<WorkflowRun> filterRuns(Predicate<WorkflowRun> predicate) {
