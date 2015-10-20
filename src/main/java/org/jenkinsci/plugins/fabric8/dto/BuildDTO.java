@@ -67,9 +67,14 @@ public class BuildDTO extends DtoSupport {
         String result = Runs.getResultText(build);
         Map<String,Object> parameters = Runs.getBuildParameters(build);
 
+        long timeInMillis = build.getTimeInMillis();
+        long buildDuration = build.getDuration();
+        if (buildDuration == 0L) {
+            buildDuration = System.currentTimeMillis() - timeInMillis;
+        }
         BuildDTO dto = new BuildDTO(build.getId(), build.getNumber(), build.getDisplayName(), build.isBuilding(),
-                result, build.getDuration(), build.getEstimatedDuration(),
-                build.getTimeInMillis(), summaryMessage, build.getUrl(), parameters);
+                result, buildDuration, build.getEstimatedDuration(),
+                timeInMillis, summaryMessage, build.getUrl(), parameters);
         dto.setCauses(CauseDTO.createCauseDTOList(build.getCauses()));
         dto.setChangeList(GitChangeSetDTO.createGitChangeSetDTOList(build.getChangeSets()));
         return dto;
