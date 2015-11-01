@@ -32,14 +32,20 @@ import org.jenkinsci.plugins.fabric8.support.HubotClient;
  */
 public class HubotApproveStep extends Fabric8Step {
     private final String message;
+    private final String room;
 
     @DataBoundConstructor
-    public HubotApproveStep(String message) {
+    public HubotApproveStep(String message, String room) {
         this.message = message;
+        this.room = room;
     }
 
     public String getMessage() {
         return message;
+    }
+
+    public String getRoom() {
+        return room;
     }
 
     @Extension
@@ -56,7 +62,7 @@ public class HubotApproveStep extends Fabric8Step {
 
         @Override
         public String getDisplayName() {
-            return "Sends a message with proceed/abort instructions to the hubot chat room for a project";
+            return "Sends a message with proceed/abort instructions to a hubot chat room for a project";
         }
     }
 
@@ -73,7 +79,10 @@ public class HubotApproveStep extends Fabric8Step {
 
         @Override
         protected String run() throws Exception {
-            String room = HubotClient.getProjectRoom(listener, workspace);
+            String room = step.getRoom();
+            if (room == null){
+              room = HubotClient.getProjectRoom(listener, workspace);
+            }
             String jobName = DevOps.getJobName(listener, envVars);
             String buildNumber = DevOps.getBuildNumber(listener, envVars);
             String message = step.getMessage() + "\n" +
