@@ -63,7 +63,7 @@ public class BuildDTO extends DtoSupport {
             return null;
         }
         Run.Summary summary = build.getBuildStatusSummary();
-        String summaryMessage = (summary != null) ? summary.message : null;
+        String summaryMessage = summary.message;
         String result = Runs.getResultText(build);
         Map<String,Object> parameters = Runs.getBuildParameters(build);
 

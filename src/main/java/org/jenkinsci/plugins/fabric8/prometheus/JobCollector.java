@@ -25,6 +25,7 @@ import org.jenkinsci.plugins.fabric8.support.Callback;
 import org.jenkinsci.plugins.fabric8.support.FlowNodes;
 import org.jenkinsci.plugins.fabric8.support.Jobs;
 import org.jenkinsci.plugins.fabric8.support.Runs;
+import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 
@@ -34,17 +35,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.jenkinsci.plugins.fabric8.support.FlowNodes.getSortedStageNodes;
-
 /**
  */
 public class JobCollector extends Collector {
     private static final String DEFAULT_NAMESPACE = "default";
 
     private String fullname = "builds";
-    private double[] buildHistogramBuckets = { 1000, 30000, 60000 };
+    //private double[] buildHistogramBuckets = { 1000, 30000, 60000 };
     private String subsystem = "jenkins";
-    private String namespace;
+    private String namespace = "";
 
     public JobCollector() {
         namespace = System.getenv("KUBERNETES_NAMESPACE");
@@ -109,9 +108,14 @@ public class JobCollector extends Collector {
 
                     if (build instanceof WorkflowRun) {
                         WorkflowRun workflowRun = (WorkflowRun) build;
-                        List<FlowNode> stages = getSortedStageNodes(workflowRun.getExecution());
-                        for (FlowNode stage : stages) {
-                            observeStage(stageCollectorMap, job, build, stage);
+                        FlowExecution flowExecution = workflowRun.getExecution();
+                        if (flowExecution != null) {
+                            List<FlowNode> stages = FlowNodes.getSortedStageNodes(flowExecution);
+                            if (stages != null) {
+                                for (FlowNode stage : stages) {
+                                    observeStage(stageCollectorMap, job, build, stage);
+                                }
+                            }
                         }
                     }
                 }
@@ -128,7 +132,7 @@ public class JobCollector extends Collector {
 
         mfsList.addAll(summary.collect());
         Collection<Summary> stageCollectors = stageCollectorMap.values();
-        for (Summary stageCollector : stageCollectorMap.values()) {
+        for (Summary stageCollector : stageCollectors) {
             mfsList.addAll(stageCollector.collect());
         }
         //mfsList.addAll(histogram.collect());

@@ -26,18 +26,14 @@ import org.jenkinsci.plugins.fabric8.support.JSONHelper;
 import org.jenkinsci.plugins.fabric8.support.LogHelper;
 import org.jenkinsci.plugins.fabric8.support.hack.AnnotatedLargeText;
 import org.jenkinsci.plugins.fabric8.support.hack.AnnotatedLargeTexts;
+import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
-import org.kohsuke.stapler.framework.io.CharSpool;
-import org.kohsuke.stapler.framework.io.LineEndNormalizingWriter;
 
 import javax.annotation.Nonnull;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -65,9 +61,10 @@ public class WorkflowRunAction extends ActionSupport<WorkflowRun> {
     }
 
     public Object doStages() {
+        Object result = null;
         WorkflowRun run = getTarget();
-        final BuildDTO buildDTO = BuildDTO.createBuildDTO(run.getParent(), run);
         if (run != null) {
+            final BuildDTO buildDTO = BuildDTO.createBuildDTO(run.getParent(), run);
             Callback<FlowNode> callback = new Callback<FlowNode>() {
 
                 @Override
@@ -80,8 +77,9 @@ public class WorkflowRunAction extends ActionSupport<WorkflowRun> {
             };
             FlowNodes.forEach(run.getExecution(), callback);
             FlowNodes.sortInStageIdOrder(buildDTO.getStages());
+            result =  JSONHelper.jsonResponse(buildDTO);
         }
-        return JSONHelper.jsonResponse(buildDTO);
+        return result;
     }
 
     public Object doLog() throws IOException {
@@ -109,11 +107,14 @@ public class WorkflowRunAction extends ActionSupport<WorkflowRun> {
         WorkflowRun run = getTarget();
         List<NodeDTO> answer = new ArrayList<NodeDTO>();
         if (run != null) {
-            List<FlowNode> nodes = FlowNodes.getSortedFlowNodes(run.getExecution());
-            for (FlowNode node : nodes) {
-                NodeDTO dto = NodeDTO.createNodeDTO(node);
-                if (dto != null) {
-                    answer.add(dto);
+            FlowExecution flowExecution = run.getExecution();
+            if (flowExecution != null) {
+                List<FlowNode> nodes = FlowNodes.getSortedFlowNodes(flowExecution);
+                for (FlowNode node : nodes) {
+                    NodeDTO dto = NodeDTO.createNodeDTO(node);
+                    if (dto != null) {
+                        answer.add(dto);
+                    }
                 }
             }
         }

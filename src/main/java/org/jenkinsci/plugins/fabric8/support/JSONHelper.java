@@ -44,9 +44,11 @@ public class JSONHelper {
             @Override
             public void generateResponse(StaplerRequest request, StaplerResponse response, Object node) throws IOException, ServletException {
                 response.setContentType("application/json");
-                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-                objectMapper.writeValue(buffer, payload);
-                response.getOutputStream().write(buffer.toByteArray());
+                if (payload != null) {
+                    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                    objectMapper.writeValue(buffer, payload);
+                    response.getOutputStream().write(buffer.toByteArray());
+                }
             }
         };
     }

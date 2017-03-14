@@ -19,21 +19,12 @@ package org.jenkinsci.plugins.fabric8.support.hack;
 import com.jcraft.jzlib.GZIPInputStream;
 import com.jcraft.jzlib.GZIPOutputStream;
 import com.trilead.ssh2.crypto.Base64;
+import hudson.PluginManager;
 import hudson.console.ConsoleAnnotationOutputStream;
 import hudson.console.ConsoleAnnotator;
 import hudson.console.PlainTextConsoleOutputStream;
 import hudson.remoting.ObjectInputStreamEx;
 import hudson.util.TimeUnit2;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
-import java.io.Writer;
-import java.nio.charset.Charset;
-import javax.crypto.Cipher;
-import javax.crypto.CipherInputStream;
-import javax.crypto.CipherOutputStream;
 import jenkins.model.Jenkins;
 import jenkins.security.CryptoConfidentialKey;
 import org.apache.commons.io.output.ByteArrayOutputStream;
@@ -41,6 +32,17 @@ import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.framework.io.ByteBuffer;
+
+import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
+import javax.crypto.CipherOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.Writer;
+import java.nio.charset.Charset;
 
 public class AnnotatedLargeText<T> extends LargeText {
     private T context;
@@ -79,21 +81,32 @@ public class AnnotatedLargeText<T> extends LargeText {
             String e = req != null?req.getHeader("X-ConsoleAnnotator"):null;
             if(e != null) {
                 Cipher sym = PASSING_ANNOTATOR.decrypt();
-                ObjectInputStreamEx ois = new ObjectInputStreamEx(new GZIPInputStream(new CipherInputStream(new ByteArrayInputStream(Base64.decode(e.toCharArray())), sym)), Jenkins.getInstance().pluginManager.uberClassLoader);
+                if (sym != null) {
+                    Jenkins jenkins = Jenkins.getActiveInstance();
+                    if (jenkins != null) {
+                        PluginManager pluginManager = jenkins.getPluginManager();
+                        if (pluginManager != null) {
+                            ClassLoader classLoader = pluginManager.uberClassLoader;
+                            if (classLoader != null) {
+                                ObjectInputStreamEx ois = new ObjectInputStreamEx(new GZIPInputStream(new CipherInputStream(new ByteArrayInputStream(Base64.decode(e.toCharArray())), sym)), classLoader);
 
-                ConsoleAnnotator var7;
-                try {
-                    long timestamp = ois.readLong();
-                    if(TimeUnit2.HOURS.toMillis(1L) <= Math.abs(System.currentTimeMillis() - timestamp)) {
-                        return ConsoleAnnotator.initial(this.context == null?null:this.context.getClass());
+                                ConsoleAnnotator consoleAnnotator;
+                                try {
+                                    long timestamp = ois.readLong();
+                                    if (TimeUnit2.HOURS.toMillis(1L) <= Math.abs(System.currentTimeMillis() - timestamp)) {
+                                        return ConsoleAnnotator.initial(this.context == null ? null : this.context.getClass());
+                                    }
+
+                                    consoleAnnotator = (ConsoleAnnotator) ois.readObject();
+                                } finally {
+                                    ois.close();
+                                }
+
+                                return consoleAnnotator;
+                            }
+                        }
                     }
-
-                    var7 = (ConsoleAnnotator)ois.readObject();
-                } finally {
-                    ois.close();
                 }
-
-                return var7;
             }
         } catch (ClassNotFoundException var12) {
             throw new IOException(var12);

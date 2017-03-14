@@ -39,54 +39,57 @@ public class LogHelper {
             req.setAttribute("html", Boolean.valueOf(true));
         }
 
+        if (text != null) {
+            long start = getLongParameter(req, "start", 0);
+            long first = getLongParameter(req, "first", -1);
+            int size = getIntParameter(req, "size", DEFAULT_SIZE);
+            boolean tail = getBoolParameter(req, "tail");
 
-        long start = getLongParameter(req, "start", 0);
-        long first = getLongParameter(req, "first", -1);
-        int size = getIntParameter(req, "size", DEFAULT_SIZE);
-        boolean tail = getBoolParameter(req, "tail");
-
-        if (text.length() < start) {
-            start = 0;  // text rolled over
-        }
-        if (size < 0) {
-            size = DEFAULT_SIZE;
-        }
-        if (size > MAX_SIZE) {
-            size = MAX_SIZE;
-        }
-        boolean backwards = false;
-        long logLength = text.length();
-        if (tail) {
-            if (start == logLength) {
-                // lets return earlier data!
-                // if we've data to be read before 'first'
-                if (first > 0) {
-                    backwards = true;
-                    start = first - size;
-                    if (first < size) {
-                        // lets not return too much data as we're getting the first little chunk
-                        size = (int) first;
+            if (text.length() < start) {
+                start = 0;  // text rolled over
+            }
+            if (size < 0) {
+                size = DEFAULT_SIZE;
+            }
+            if (size > MAX_SIZE) {
+                size = MAX_SIZE;
+            }
+            boolean backwards = false;
+            long logLength = text.length();
+            if (tail) {
+                if (start == logLength) {
+                    // lets return earlier data!
+                    // if we've data to be read before 'first'
+                    if (first > 0) {
+                        backwards = true;
+                        start = first - size;
+                        if (first < size) {
+                            // lets not return too much data as we're getting the first little chunk
+                            size = (int) first;
+                        }
+                    }
+                }
+                // lets support jumping to the end of the file if its long
+                if (start == 0) {
+                    long end = start + size;
+                    if (end < logLength) {
+                        start = logLength - size;
                     }
                 }
             }
-            // lets support jumping to the end of the file if its long
-            if (start == 0) {
-                long end = start + size;
-                if (end < logLength) {
-                    start = logLength - size;
-                }
+            if (start < 0) {
+                start = 0;
             }
+            StringWriter buffer = new StringWriter();
+            long textSize = text.writeLogTo(start, size, new LineEndNormalizingWriter(buffer));
+            boolean completed = text.isComplete();
+            long returnedLength = textSize - start;
+            LogsDTO logsDTO = new LogsDTO(completed, start, returnedLength, backwards, logLength);
+            logsDTO.setLogText(buffer.toString());
+            return JSONHelper.jsonResponse(logsDTO);
         }
-        if (start < 0) {
-            start = 0;
-        }
-        StringWriter buffer = new StringWriter();
-        long textSize = text.writeLogTo(start, size, new LineEndNormalizingWriter(buffer));
-        boolean completed = text.isComplete();
-        long returnedLength = textSize - start;
-        LogsDTO logsDTO = new LogsDTO(completed, start, returnedLength, backwards, logLength);
-        logsDTO.setLogText(buffer.toString());
-        return JSONHelper.jsonResponse(logsDTO);
+        return JSONHelper.jsonResponse(null);
+
     }
 
     public static int getIntParameter(StaplerRequest req, String name, int defaultValue) {
