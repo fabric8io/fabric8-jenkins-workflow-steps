@@ -42,28 +42,19 @@ package org.jenkinsci.plugins.fabric8.support.hack;
  */
 
 
+import com.jcraft.jzlib.GZIPInputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.CountingOutputStream;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
-
-import javax.servlet.http.HttpServletResponse;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.RandomAccessFile;
-import java.io.Reader;
-import java.io.Writer;
-import java.nio.charset.Charset;
-import com.jcraft.jzlib.GZIPInputStream;
 import org.kohsuke.stapler.framework.io.ByteBuffer;
 import org.kohsuke.stapler.framework.io.CharSpool;
 import org.kohsuke.stapler.framework.io.LineEndNormalizingWriter;
 import org.kohsuke.stapler.framework.io.WriterOutputStream;
+
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
+import java.nio.charset.Charset;
 
 
 /**
@@ -279,7 +270,7 @@ public class LargeText {
         Session f = source.open();
         f.skip(start);
 
-        long end = start + size;
+        //long end = start + size;
 
         byte[] buf = new byte[size];
         int sz;

@@ -19,9 +19,7 @@ package org.jenkinsci.plugins.fabric8.rest;
 import hudson.Extension;
 import hudson.model.Job;
 import hudson.model.UnprotectedRootAction;
-import io.prometheus.client.CollectorRegistry;
 import org.jenkinsci.plugins.fabric8.dto.JobMetricDTO;
-import org.jenkinsci.plugins.fabric8.prometheus.JobCollector;
 import org.jenkinsci.plugins.fabric8.support.Callback;
 import org.jenkinsci.plugins.fabric8.support.JSONHelper;
 import org.jenkinsci.plugins.fabric8.support.Jobs;
@@ -33,8 +31,8 @@ import java.util.List;
  */
 @Extension
 public class MetricsAction implements UnprotectedRootAction {
-    private CollectorRegistry collectorRegistry;
-    private JobCollector jobCollector = new JobCollector();
+    //private CollectorRegistry collectorRegistry;
+    //private JobCollector jobCollector = new JobCollector();
 
     @Override
     public String getIconFileName() {
